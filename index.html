@@ -520,32 +520,62 @@
 
     <!-- Inicializar Iconos y Lógica del Formulario -->
     <script>
-        // Inicializar Lucide Icons
-        lucide.createIcons();
-
-        // Manejo del formulario
-        function enviarFormulario(e) {
+        async function enviarFormulario(e) {
             e.preventDefault();
             
             const btn = document.getElementById('submit-btn');
             const exito = document.getElementById('form-exito');
             
-            // Estado de carga
+            // CAPTURA DE DATOS: Obtenemos lo que el usuario escribió
+            const datosLead = {
+                nombre: document.getElementById('nombre').value,
+                email: document.getElementById('email').value,
+                empresa: document.getElementById('empresa').value,
+                sector: document.getElementById('sector').value,
+                reto: document.getElementById('reto').value,
+                mensaje: document.getElementById('mensaje').value
+            };
+            
+            // ESTADO DE CARGA: Visualmente mostramos que algo está pasando
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin mr-2 inline"></i> Procesando solicitud...';
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin mr-2 inline"></i> Enviando...';
             btn.classList.add('opacity-75', 'cursor-not-allowed');
-            lucide.createIcons(); // Recargar icono del loader
-
-            // Simular envío (Aquí iría la conexión real a n8n, Make o un CRM)
-            setTimeout(() => {
-                // Ocultar botón y mostrar éxito
-                btn.style.display = 'none';
-                exito.classList.remove('hidden');
+            btn.disabled = true;
+            lucide.createIcons();
+        
+            try {
+                // --- AQUÍ PONES TU URL DE MAKE ---
+                const urlWebhook = "https://hook.us2.make.com/5lr1k6pjuclbre7kx2gwtdhc08pktu8h"; 
                 
-                // Limpiar formulario (opcional)
-                document.getElementById('lead-form').reset();
-            }, 1500);
+                const respuesta = await fetch(urlWebhook, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(datosLead)
+                });
+        
+                if (respuesta.ok) {
+                    // ÉXITO: Ocultamos el botón y mostramos el mensaje verde
+                    btn.style.display = 'none';
+                    exito.classList.remove('hidden');
+                    document.getElementById('lead-form').reset();
+                } else {
+                    throw new Error('Error en el servidor');
+                }
+            } catch (error) {
+                // ERROR: Si algo falla (ej. no hay internet), avisamos al usuario
+                console.error('Error al enviar:', error);
+                alert('Lo sentimos, hubo un error. Por favor intenta de nuevo.');
+                
+                // Restauramos el botón para que pueda intentar otra vez
+                btn.innerHTML = originalText;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                btn.disabled = false;
+                lucide.createIcons();
+            }
         }
     </script>
 </body>
+
 </html>
